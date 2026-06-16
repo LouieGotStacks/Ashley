@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ashley Iverson</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .chat-container {
+      width: 100%;
+      max-width: 720px;
+      height: 90vh;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 20px 24px;
+      background: #1a1a2e;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chat-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #e94560;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .chat-header h1 {
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .chat-header p {
+      font-size: 12px;
+      opacity: 0.6;
+      margin-top: 2px;
+    }
+
+    .reset-btn {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.7);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .reset-btn:hover {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .message {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      max-width: 80%;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .message.ashley {
+      align-self: flex-start;
+    }
+
+    .bubble {
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .message.user .bubble {
+      background: #1a1a2e;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.ashley .bubble {
+      background: #f0f2f5;
+      color: #1a1a2e;
+      border-bottom-left-radius: 4px;
+    }
+
+    .message.ashley .avatar {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      flex-shrink: 0;
+      align-self: flex-end;
+    }
+
+    .typing-indicator .bubble {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      padding: 14px 18px;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      background: #999;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-6px); }
+    }
+
+    .input-area {
+      padding: 16px 20px;
+      border-top: 1px solid #eee;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    textarea {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-family: inherit;
+      resize: none;
+      outline: none;
+      max-height: 120px;
+      line-height: 1.4;
+      transition: border 0.15s;
+    }
+
+    textarea:focus {
+      border-color: #1a1a2e;
+    }
+
+    .send-btn {
+      background: #1a1a2e;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      width: 44px;
+      height: 44px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+
+    .send-btn:hover { background: #e94560; }
+    .send-btn:disabled { background: #ccc; cursor: default; }
+
+    .send-btn svg { width: 18px; height: 18px; }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <div class="avatar">AI</div>
+        <div>
+          <h1>Ashley Iverson</h1>
+          <p>Southeast Homeworks Scheduling</p>
+        </div>
+      </div>
+      <button class="reset-btn" onclick="resetChat()">New conversation</button>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="message ashley">
+        <div class="avatar">AI</div>
+        <div class="bubble">Hey Louis! What's on your mind?</div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <textarea
+        id="input"
+        placeholder="Ask about your schedule..."
+        rows="1"
+        onkeydown="handleKey(event)"
+        oninput="autoResize(this)"
+      ></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendMessage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const messagesEl = document.getElementById("messages");
+    const inputEl = document.getElementById("input");
+    const sendBtn = document.getElementById("send-btn");
+
+    function scrollToBottom() {
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function autoResize(el) {
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 120) + "px";
+    }
+
+    function handleKey(e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function addMessage(role, text) {
+      const wrapper = document.createElement("div");
+      wrapper.className = `message ${role}`;
+
+      if (role === "ashley") {
+        const av = document.createElement("div");
+        av.className = "avatar";
+        av.textContent = "AI";
+        wrapper.appendChild(av);
+      }
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = text;
+      wrapper.appendChild(bubble);
+
+      messagesEl.appendChild(wrapper);
+      scrollToBottom();
+      return wrapper;
+    }
+
+    function addTypingIndicator() {
+      const wrapper = document.createElement("div");
+      wrapper.className = "message ashley typing-indicator";
+
+      const av = document.createElement("div");
+      av.className = "avatar";
+      av.textContent = "AI";
+      wrapper.appendChild(av);
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+      wrapper.appendChild(bubble);
+
+      messagesEl.appendChild(wrapper);
+      scrollToBottom();
+      return wrapper;
+    }
+
+    async function sendMessage() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      inputEl.value = "";
+      inputEl.style.height = "auto";
+      sendBtn.disabled = true;
+
+      addMessage("user", text);
+      const typing = addTypingIndicator();
+
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text }),
+        });
+        const data = await res.json();
+        typing.remove();
+        addMessage("ashley", data.reply || data.error);
+      } catch (err) {
+        typing.remove();
+        addMessage("ashley", "Something went wrong. Try again.");
+      }
+
+      sendBtn.disabled = false;
+      inputEl.focus();
+    }
+
+    async function resetChat() {
+      await fetch("/reset", { method: "POST" });
+      messagesEl.innerHTML = "";
+      addMessage("ashley", "Hey Louis! What's on your mind?");
+    }
+
+    inputEl.focus();
+  </script>
+</body>
+</html>
