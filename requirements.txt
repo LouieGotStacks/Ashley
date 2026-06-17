@@ -34,6 +34,7 @@ itsdangerous==2.2.0
 Jinja2==3.1.6
 jiter==0.14.0
 MarkupSafe==3.0.3
+msal==1.31.1
 multidict==6.7.1
 notion-client==2.2.1
 oauthlib==3.3.1
