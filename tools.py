@@ -179,7 +179,8 @@ TOOLS = [
         "name": "send_email",
         "description": (
             "Send a NEW email immediately from the Ashley mailbox. "
-            "ONLY USE FOR EMAILS TO LOUIS (status updates, scheduling questions, summaries). "
+            "ONLY USE FOR EMAILS TO LOUIS OR COLIN — the two internal team members "
+            "(status updates, scheduling questions, summaries, back-and-forth conversation). "
             "Never use this to email a lead — for lead emails use create_draft_email so Louis "
             "can review the draft in his Drafts folder before sending."
         ),
@@ -197,7 +198,7 @@ TOOLS = [
         "name": "reply_to_email",
         "description": (
             "Reply in-thread to an existing email, sent immediately. "
-            "ONLY USE WHEN REPLYING TO LOUIS. "
+            "ONLY USE WHEN REPLYING TO LOUIS OR COLIN — the two internal team members. "
             "For replies to leads, use create_draft_reply so Louis can review before sending."
         ),
         "input_schema": {
