@@ -1,0 +1,35 @@
+name: Ashley email loop
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # every 10 minutes
+  workflow_dispatch:           # lets you trigger manually from GitHub UI
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Ashley
+        env:
+          ANTHROPIC_API_KEY:            ${{ secrets.ANTHROPIC_API_KEY }}
+          NOTION_TOKEN:                 ${{ secrets.NOTION_TOKEN }}
+          NOTION_CRM_DATABASE_ID:       ${{ secrets.NOTION_CRM_DATABASE_ID }}
+          NOTION_CALENDAR_DATABASE_ID:  ${{ secrets.NOTION_CALENDAR_DATABASE_ID }}
+          NOTION_LEAD_TEMPLATE_PAGE_ID: ${{ secrets.NOTION_LEAD_TEMPLATE_PAGE_ID }}
+          MS_TENANT_ID:                 ${{ secrets.MS_TENANT_ID }}
+          MS_CLIENT_ID:                 ${{ secrets.MS_CLIENT_ID }}
+          MS_CLIENT_SECRET:             ${{ secrets.MS_CLIENT_SECRET }}
+          ASHLEY_MAILBOX:               ${{ secrets.ASHLEY_MAILBOX }}
+        run: python run_email_loop.py
