@@ -160,12 +160,15 @@ TOOLS = [
     # ---------- Email tools (Outlook 365 via Microsoft Graph) ----------
 
     {
-        "name": "get_unread_emails",
+        "name": "get_new_emails",
         "description": (
-            "Fetch unread emails from Ashley's mailbox (ashley@southeasthomeworks.com), oldest first. "
-            "Returns MESSAGE_ID, CONVERSATION_ID, sender, received time, subject, and full body for each. "
-            "Call this at the start of each run to see what needs handling. "
-            "Use the MESSAGE_ID with reply_to_email / create_draft_reply / mark_as_read."
+            "Fetch recent Inbox messages Ashley has NOT yet handled, oldest first. "
+            "'Handled' means tagged with the 'Ashley-Handled' Outlook category — set by "
+            "mark_as_handled. The read/unread flag is ignored (Louis controls that), so a "
+            "message Louis previewed in his Outlook still shows up here until Ashley handles it. "
+            "Returns MESSAGE_ID, CONVERSATION_ID, sender, received time, subject, and full body. "
+            "Call this at the start of each run. Always call mark_as_handled after dealing with "
+            "a message, or you'll re-process it next cycle."
         ),
         "input_schema": {
             "type": "object",
@@ -245,16 +248,17 @@ TOOLS = [
         },
     },
     {
-        "name": "mark_as_read",
+        "name": "mark_as_handled",
         "description": (
-            "Mark an email as read so the next poll cycle skips it. "
-            "ALWAYS call this on each unread email after you've handled it (replied, drafted, "
-            "logged to CRM, etc.) — otherwise you'll re-process the same message every poll."
+            "Tag a message with the 'Ashley-Handled' Outlook category so future poll cycles skip it. "
+            "ALWAYS call this on each message after you've handled it (replied, drafted, logged to "
+            "CRM, decided no action needed, etc.) — otherwise you'll re-process it every poll. "
+            "This does NOT touch the read/unread flag; that stays under Louis's control."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
-                "message_id": {"type": "string", "description": "MESSAGE_ID from get_unread_emails."},
+                "message_id": {"type": "string", "description": "MESSAGE_ID from get_new_emails."},
             },
             "required": ["message_id"],
         },

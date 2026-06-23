@@ -79,26 +79,49 @@ def _graph(method: str, endpoint: str, json_body: Optional[dict] = None) -> dict
 
 # ---------- Reading mail ----------
 
-def get_unread_emails(limit: int = 10) -> str:
+HANDLED_CATEGORY = "Ashley-Handled"
+
+
+def get_new_emails(limit: int = 10, days: int = 14) -> str:
     """
-    Fetch unread messages from Ashley's inbox, OLDEST first
-    (so we process forwards in arrival order).
-    Returns a plain-text summary suitable for the model to read.
+    Fetch recent Inbox messages that Ashley has NOT yet handled,
+    oldest first (so forwards process in arrival order).
+
+    "Handled" is tracked via the 'Ashley-Handled' Outlook category, set by
+    mark_as_handled. This is independent of the read/unread flag — Louis
+    can read/preview without affecting what Ashley sees as new work.
+
+    `days` caps how far back we look so results stay bounded.
     """
+    from datetime import datetime, timedelta, timezone
+
+    cutoff_iso = (datetime.now(timezone.utc) - timedelta(days=days)).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
+
+    # Pull a generous batch by date, then filter out handled ones client-side.
+    # (Graph $filter on multi-value 'categories' with negation is finicky;
+    # filtering in Python is simpler and more reliable.)
+    fetch_top = max(limit * 3, 25)
     params = (
-        f"?$filter=isRead eq false"
-        f"&$top={limit}"
+        f"?$filter=receivedDateTime ge {cutoff_iso}"
+        f"&$top={fetch_top}"
         f"&$orderby=receivedDateTime asc"
-        f"&$select=id,conversationId,subject,from,receivedDateTime,body"
+        f"&$select=id,conversationId,subject,from,receivedDateTime,body,categories"
     )
     data = _graph("GET", f"/users/{MAILBOX}/mailFolders/Inbox/messages{params}")
     messages = data.get("value", [])
 
-    if not messages:
-        return "No unread messages in Ashley's inbox."
+    pending = [
+        m for m in messages
+        if HANDLED_CATEGORY not in (m.get("categories") or [])
+    ][:limit]
+
+    if not pending:
+        return "No new (unhandled) messages in Ashley's inbox."
 
     chunks = []
-    for msg in messages:
+    for msg in pending:
         sender_obj = msg.get("from", {}).get("emailAddress", {}) or {}
         sender = f"{sender_obj.get('name', '?')} <{sender_obj.get('address', '?')}>"
         chunks.append(
@@ -111,6 +134,10 @@ def get_unread_emails(limit: int = 10) -> str:
             f"Body:\n{msg.get('body', {}).get('content', '')}\n"
         )
     return "\n".join(chunks)
+
+
+# Back-compat alias so older callers keep working.
+get_unread_emails = get_new_emails
 
 
 def get_conversation(conversation_id: str) -> str:
@@ -209,14 +236,32 @@ def create_draft_reply(message_id: str, body: str) -> str:
 
 # ---------- State management ----------
 
-def mark_as_read(message_id: str) -> str:
-    """Mark a message read so the next poll cycle skips it."""
+def mark_as_handled(message_id: str) -> str:
+    """
+    Tag a message with the 'Ashley-Handled' category so future poll cycles
+    skip it. Preserves any categories the message already has.
+
+    Read/unread flag is left alone — Louis controls that as a normal user.
+    """
+    # Fetch current categories so we can append without clobbering.
+    msg = _graph(
+        "GET",
+        f"/users/{MAILBOX}/messages/{message_id}?$select=categories",
+    )
+    existing = msg.get("categories") or []
+    if HANDLED_CATEGORY in existing:
+        return f"Message {message_id} was already marked handled."
+
     _graph(
         "PATCH",
         f"/users/{MAILBOX}/messages/{message_id}",
-        json_body={"isRead": True},
+        json_body={"categories": existing + [HANDLED_CATEGORY]},
     )
-    return f"Marked message {message_id} as read"
+    return f"Marked message {message_id} as handled"
+
+
+# Back-compat alias — old code/prompts that call mark_as_read still work.
+mark_as_read = mark_as_handled
 
 
 # ---------- Local test ----------
@@ -224,7 +269,7 @@ def mark_as_read(message_id: str) -> str:
 if __name__ == "__main__":
     print("Testing Microsoft Graph connection to Ashley's mailbox...\n")
     try:
-        result = get_unread_emails(limit=5)
+        result = get_new_emails(limit=5)
         print(result)
         print("\n✅ Connection works. Auth is set up correctly.")
     except Exception as e:

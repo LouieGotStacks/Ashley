@@ -15,9 +15,9 @@ import anthropic
 
 from tools import TOOLS
 from outlook_tool import (
-    get_unread_emails, send_email, reply_to_email,
+    get_new_emails, send_email, reply_to_email,
     create_draft_email, create_draft_reply,
-    mark_as_read, get_conversation,
+    mark_as_handled, get_conversation,
 )
 from notion_tool import (
     query_crm, create_crm_lead,
@@ -52,9 +52,14 @@ a confident wrong action.
 
 # How you work
 You don't run continuously. Every 10 minutes a scheduled job wakes you up to check
-your inbox. Each run starts with get_unread_emails. Handle or ask about each unread
-message, then call mark_as_read — always — or you'll re-process the same message
-forever.
+your inbox. Each run starts with get_new_emails — that returns messages you haven't
+HANDLED yet (tracked via the 'Ashley-Handled' Outlook category, independent of
+read/unread). Handle or ask about each message, then call mark_as_handled — always —
+or you'll re-process the same message forever.
+
+Note: Louis may have already read a message in his own Outlook before you see it.
+That's fine — read/unread is his flag, not yours. Your only signal for "is this
+new work?" is whether mark_as_handled has been called on it.
 
 # Who you talk to
 You can email and reply directly (send_email / reply_to_email) to these people:
@@ -149,8 +154,8 @@ def serialize_content(content) -> list:
 def run_tool(tool_name: str, tool_input: dict) -> str:
     """Dispatch a tool call to the right Python function."""
     # Email
-    if tool_name == "get_unread_emails":
-        return get_unread_emails(limit=tool_input.get("limit", 10))
+    if tool_name == "get_new_emails":
+        return get_new_emails(limit=tool_input.get("limit", 10))
     if tool_name == "send_email":
         return send_email(tool_input["to"], tool_input["subject"], tool_input["body"])
     if tool_name == "reply_to_email":
@@ -159,8 +164,8 @@ def run_tool(tool_name: str, tool_input: dict) -> str:
         return create_draft_email(tool_input["to"], tool_input["subject"], tool_input["body"])
     if tool_name == "create_draft_reply":
         return create_draft_reply(tool_input["message_id"], tool_input["body"])
-    if tool_name == "mark_as_read":
-        return mark_as_read(tool_input["message_id"])
+    if tool_name == "mark_as_handled":
+        return mark_as_handled(tool_input["message_id"])
     if tool_name == "get_conversation":
         return get_conversation(tool_input["conversation_id"])
 
