@@ -227,6 +227,13 @@ def main():
     now = datetime.now(ZoneInfo("America/Chicago"))
     current_time = now.strftime("%A, %B %-d, %Y at %-I:%M %p Central Time")
 
+    # Cheap pre-check: if there's no new mail, exit BEFORE spending any tokens.
+    # Empty-inbox wake-ups were the main source of idle spend.
+    inbox_status = get_new_emails(limit=1)
+    if inbox_status.startswith("No new"):
+        print(f"[Ashley skipped {current_time}: nothing to handle]")
+        return
+
     memory = load_memory()
     memory_block = f"\n\n## Your Memory Notes\n{memory}" if memory else ""
     system = f"{SYSTEM_PROMPT}{memory_block}\n\nCurrent date and time: {current_time}"

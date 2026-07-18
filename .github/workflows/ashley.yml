@@ -1,9 +1,11 @@
 name: Ashley email loop
 
 on:
-  schedule:
-    - cron: "*/10 * * * *"   # every 10 minutes
-  workflow_dispatch:           # lets you trigger manually from GitHub UI
+  # Cron disabled while we sort out idle-spend / trigger reliability.
+  # Zapier + manual "Run workflow" are the only triggers for now.
+  # schedule:
+  #   - cron: "*/10 * * * *"   # every 10 minutes
+  workflow_dispatch:           # manual + Zapier trigger her via API
 
 jobs:
   poll:
